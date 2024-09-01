@@ -1,9 +1,8 @@
+-- Active: 1720175661655@@mysql-db@3306@testdb
 -- stored procedure
 -- functions
--- triggers
 -- views
 
--- functions
 --
 
 -- create function
@@ -12,7 +11,7 @@
 -- BEGIN
 --     -- statements
 -- END;
-
+use testdb;
 
 -- A function to calculate age
 CREATE FUNCTION fnAge(p_birth_date DATE)
@@ -27,7 +26,6 @@ END;
 SELECT fnAge('1990-01-01');
 
 -- A function to calculate the area of a circle
-DELIMITER $$
 CREATE FUNCTION fnArea(p_radius DECIMAL(5,2))
 RETURNS DECIMAL(10,2)
 DETERMINISTIC
@@ -35,15 +33,16 @@ BEGIN
     DECLARE v_area DECIMAL(10,2);
     SET v_area = PI() * p_radius * p_radius;
     RETURN v_area;
-END $$
-DELIMITER ;
+END ;
+
 
 SELECT fnArea(5);
 
 
-
+Table t1;
 -- we can also execute routines against existing objects
-CREATE FUNCTION fn1(param_id INT) RETURNS CHAR(20)
+CREATE FUNCTION fn1(param_id INT) 
+RETURNS CHAR(20)
 DETERMINISTIC
 BEGIN
     DECLARE fn CHAR(20);
@@ -91,17 +90,26 @@ END;
 
 -- call stored procedure
 CALL sp2(2);
-
+Table t1;
 -- create stored procedure with parameters and return value
-CREATE PROCEDURE sp3(IN param_id INT, OUT param_first_name VARCHAR(20))
+CREATE PROCEDURE sp4(IN param_id INT, OUT param_first_name VARCHAR(20))
 BEGIN
     SELECT first_name INTO param_first_name -- assign value to param_first_name
     FROM t1 WHERE id = param_id;
-    SELECT @first_name;
+    SELECT @first_name;  
 END;
 
+CREATE PROCEDURE sp5(IN param_id INT, OUT param_first_name VARCHAR(20))
+BEGIN
+    SELECT first_name INTO param_first_name -- assign value to param_first_name
+    FROM t1 WHERE id = param_id;
+    -- SELECT @first_name;
+END;
+Table t1;
 -- call stored procedure
-CALL sp3(2, @first_name);
+CALL sp4(2, @first_name);
+CALL sp5(2, @first_name);
+
 SELECT @first_name;
 
 

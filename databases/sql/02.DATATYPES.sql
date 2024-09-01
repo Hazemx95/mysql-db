@@ -1,3 +1,4 @@
+-- Active: 1720175661655@@mysql-db@3306@testdb
 -- https://www.w3schools.com/mysql/mysql_datatypes.asp
 -- https://dev.mysql.com/doc/refman/8.0/en/data-types.html 
 -- numeric data types
@@ -27,6 +28,10 @@ SELECT CEILING(SQRT(15));-- same as above
 
 SELECT CONVERT( SQRT(15) , DECIMAL (5 , 2 )); -- will round up based on defined precision
 
+Use testdb;
+SELECT 1+1; 
+SELECT id + 5  FROM t1;
+SELECT CAST(id AS DECIMAL(5,2)) FROM t1;
 -- -------------------
 -- string data types
 -- char, varchar, binary, varbindary, text, blob, enum

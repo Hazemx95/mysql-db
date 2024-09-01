@@ -1,4 +1,4 @@
--- Active: 1688525394700@@pg-db@5432@sfpolice
+-- Active: 1721827665647@@pg-db@5432@sfpolice
 -- 1. get the data from the below link
 ----  https://data.sfgov.org/Public-Safety/Police-Department-Incident-Reports-Historical-2003/tmnf-yvry/data
 -- 2. save the csv file in the rdbms/databases/csv folder
@@ -7,7 +7,7 @@
 -- # psql -U postgres
 -- postgres=# CREATE DATABASE sfpolice;
 -- poatgres=# \c sfpolice
-poatgres=# CREATE TABLE
+sfpolice=# CREATE TABLE
     police_incident_reports (
         pd_id BIGINT,
         IncidentNum VARCHAR(10),
@@ -77,8 +77,9 @@ SELECT
 -- 	"HSOC Zones as of 2018-06-05 2 2", 
 -- 	"OWED Public Spaces 2 2", 
 -- 	"Neighborhoods 2"
-	FROM public.police_incident_reports LIMIT 100;
+FROM public.police_incident_reports LIMIT 10;
 
+select * from public.police_incident_reports limit 10 ;
 -- date span
 SELECT DATE_PART('year', max(date)) , DATE_PART('year', min(date))  FROM public.police_incident_reports
 
@@ -89,19 +90,26 @@ SELECT DATE_PART('year', max(date)) , DATE_PART('year', min(date))  FROM public.
 -- Exploring data
 
 -- 1. How many police districts are there?
+SELECT COUNT( pddistrict) FROM police_incident_reports;
+SELECT COUNT(pd_id) FROM police_incident_reports ;
+
 SELECT COUNT(DISTINCT pddistrict) FROM police_incident_reports;
 
 -- How many neighborhoods are there?
 SELECT COUNT('Neighborhoods 2') FROM police_incident_reports;
 
 -- How many incidents by neighborhood?
+SELECT "Neighborhoods 2" , COUNT(pd_id) AS COUNT FROM police_incident_reports GROUP BY "Neighborhoods 2" order by COUNT(*); -- Try to visualize in pgadmin
+
+SELECT "Neighborhoods 2" , COUNT(*) AS COUNT FROM police_incident_reports GROUP BY "Neighborhoods 2" order by COUNT(*); -- Try to visualize in pgadmin
+
 SELECT "Neighborhoods 2" , COUNT(*) AS COUNT FROM police_incident_reports GROUP BY 1 order by COUNT(*); -- Try to visualize in pgadmin
 
 -- Check the min and max number of incidents by neighborhood
 SELECT MAX(s.COUNT) AS MAX, MIN(s.COUNT) AS MIN, AVG(s.COUNT) As AVG 
 FROM (
     SELECT "Neighborhoods 2" AS Neighborhood, COUNT(*) FROM police_incident_reports GROUP BY "Neighborhoods 2" order by COUNT(*)
-    ) s;
+    ) as s;
 
 
 -- KPIs for incidents by neighborhood
@@ -147,14 +155,14 @@ SELECT "Neighborhoods 2" AS Neighborhood, COUNT(*),
 -- Data Cleaning using CASE WHEN and LIKE
 -- Data Cleaning using TRIM, UPPER, LOWER, INITCAP, SUBSTRING, POSITION, LENGTH, CONCAT, REPLACE, TRANSLATE, REGEXP_REPLACE, REGEXP_MATCHES, REGEXP_SPLIT_TO_ARRAY, REGEXP_SPLIT_TO_TABLE, SPLIT_PART, TO_CHAR, TO_NUMBER, TO_DATE, TO_TIMESTAMP, TO_TIMESTAMP_TZ, TO_JSON, TO_JSONB, TO_ASCII, TO_HEX, TO_BASE64, TO_REGCLASS, TO_REGPROC, TO_REGPROCEDURE, TO_REGOPER, TO_RE
 -- Type Conversion using CAST and :: 
-SELECT pd_id FROM police_incident_reports LIMIT 3; -- it's bigint now 
-SELECT pd_id*2 FROM police_incident_reports LIMIT 3; -- it's bigint now 
+SELECT pd_id FROM police_incident_reports LIMIT 3;
+ -- it's bigint now SELECT pd_id*2 FROM police_incident_reports LIMIT 3; -- it's bigint now 
+ SELECT (pd_id::varchar) FROM police_incident_reports LIMIT 3; -- Error as it's varchar now
+ SELECT CONCAT((pd_id) , ' + ' , 'Ahmed') FROM police_incident_reports LIMIT 3; -- Error as it's varchar now
 SELECT (pd_id::varchar) + 2 FROM police_incident_reports LIMIT 3; -- Error as it's varchar now
 SELECT CAST(pd_id AS varchar) * 2 FROM police_incident_reports LIMIT 3; -- Error as it's varchar now
+SELECT (pd_id::BIGINT) FROM police_incident_reports LIMIT 3; -- Error as it's varchar now
 
--- split string 
-SELECT split_part(CAST(pd_id AS varchar), '0', 1) FROM police_incident_reports LIMIT 3; -- can be split now as it's string
-SELECT split_part(pd_id, '0', 1) FROM police_incident_reports LIMIT 3; -- Error as it's bigint now and cannot be split 
 
 
 
@@ -171,29 +179,18 @@ select category, pddistrict, count(incidentnum) from police_incident_reports gro
 -- Must use the window function
 select *, count(incidentnum) over() from police_incident_reports
 
--- take a window of the full table
+-- take a window of the full tableSELECT pd_id, category, count(pd_id) over(partition by category order by pd_id) from public.police_incident_reports;
+
 Select category, pddistrict, descript, count(incidentnum) over() from police_incident_reports
 
 -- change the scope of the window to the category alone
 Select category, pddistrict, descript, count(incidentnum) over(partition by category) from police_incident_reports
 
 -- if you would like to get the equivalent to Group By
-Select category, count(incidentnum) over(partition by category) from police_incident_reports -- this will list all rows with the count without flattening the rows
 -- You must add DISTINCT statement to the above to get the equivalent to Group By
 Select DISTINCT category, count(incidentnum) over(partition by category) from police_incident_reports 
 
 -- running count of pd_id by incident category
-SELECT pd_id, category, count(pd_id) over(partition by category order by pd_id) from public.police_incident_reports;
-
-<<<<<<< HEAD
--- the most ocurring category by year
-SELECT category, date_part('year', date) as year, count(category) over(partition by date_part('year', date) order by count(category) desc) from public.police_incident_reports;
-
-
-=======
-SELECT pd_id, category, concat(cast(count(pd_id) over(partition by category order by pd_id) AS text), '/', cast(count(incidentnum) over(partition by category) as text)) from public.police_incident_reports;
->>>>>>> f1735f0 (updates to da)
-
 
 -- row_number()
 -- return a unique number for each row
@@ -210,14 +207,9 @@ select category, pddistrict, date, row_number() over(partition by category order
 select * from (
 	select category, pddistrict, date, (row_number() over(partition by category order by date)) as rn  from police_incident_reports 
 ) x
-where x.rn < 3
+where x.rn <= 3 ;
 
--- rank()
 
-select category, pddistrict, rank() over(partition by "Incident Code" order by pddistrict) from police_incident_reports
-
--- dense_rank()
-select category, pddistrict, dense_rank() over(partition by "Incident Code" order by pddistrict) from police_incident_reports
 
 
 

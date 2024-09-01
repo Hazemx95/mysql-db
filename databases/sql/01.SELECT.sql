@@ -1,3 +1,4 @@
+-- Active: 1719478844993@@mysql-db@3306@sakila
 
 -- this is a comment 
 /* this is a multimline comment 
@@ -5,7 +6,7 @@
 */
 
 SELECT 1+1; -- this is a comment till the end of the line
-SELECT 1+1; # this is a comment
+SELECT 1+1; 
 SELECT 1+1; /* this is a comment */
 SELECT 1+1; /* this is a comment
 that can extend to mutliple lines
@@ -19,17 +20,13 @@ SELECT "Hello, SQL"; -- double quotes for strings
 
 SELECT "My", "name", "is", "Ahmed"; -- select multiple values
 
-SELECT 1, "Test"; -- select different data types
-
+select 'Hello , SQL' ;
 SELECT 'Hello, SQL' AS greeting; -- alias
 
 SELECT "'This is a quoted text'"; -- embed different qoutes
 
 -- another way is to use the backslash as an escape character
 SELECT "\'This is a quoted text\'";
-SELECT "This is a single quote \' and this is a doublequote \"";
-SELECT "Line 1\nLine 2\nLine 3";
-SELECT "This is a path in windows C:\\my\\folder\\path";
 
 -- arithmetic
 SELECT 1 + 2;
@@ -39,16 +36,16 @@ SELECT 5 % 2;
 -- boolean
 SELECT 1 = 2;
 
-SELECT 1 <> 2;
+SELECT 1 <> 2; -- != 
 
 SELECT 'Hello, SQL' = 'Hello, SQL';
 
 SELECT 'hello, sql' = 'Hello, SQL';
 
 SELECT 'Hello, SQL' LIKE 'Hello, SQL';
+SELECT 'Hello, SQL' LIKE '%el%';
 
-SELECT 'Hello, SQL' LIKE 'Hello, %';
-
+-- create table t1 like t2 ; -- DDL
 
 
 -- charactersets and collations
@@ -66,8 +63,7 @@ SELECT 'a' like  'ä' COLLATE utf8mb4_cs_0900_as_cs;
 SELECT ABS(-5); -- absolute values
 SELECT ASCII('a'), ASCII('ä');
 SELECT ASCII('ab');
-SELECT CHAR(57);
-SELECT CHAR(ASCII('d'));
+
 
 -- date and time functions
 SELECT ADDDATE('2022-12-08', 24);
@@ -112,14 +108,17 @@ SELECT IF(5 > 4, "TRUE", "FALSE");
 SET @var5 := 5;
 SET @vara = 'a';
 SELECT @var5, @vara, @var10 := 10;
-
 SELECT @var11 = 11; -- null
 
 --  select from tables
---
+show tables from sakila ;
+  
 SELECT actor_id FROM sakila.actor;
 SELECT count(actor_id) FROM sakila.actor;
 SELECT DISTINCT actor_id FROM sakila.actor;
+SELECT first_name FROM sakila.actor;
+SELECT DISTINCT first_name FROM sakila.actor ;
+SELECT first_name FROM sakila.actor order by first_name;
 SELECT actor_id, first_name FROM sakila.actor;
 USE sakila;
 SELECT actor_id, first_name FROM actor;
@@ -135,7 +134,7 @@ TABLE actor; -- similar to SELECT * FROM actor;
 
 SELECT 
     actor_id  AS "Actor ID",
-    CONCAT(LOWER(first_name), ' ', LOWER(last_name)) AS "Actor Full Name",
+    CONCAT(LOWER(first_name), '  ', LOWER(last_name)) AS "Actor Full Name",
     last_update AS "Last updated"
 FROM
     actor; -- use built-in functions
@@ -160,37 +159,24 @@ UNION
 -- where clause
 SELECT * FROM film_text;
 SELECT * FROM film_text WHERE film_id < 10;
-SELECT * FROM film_text WHERE film_id between 16 and 90;
+SELECT * FROM film_text WHERE film_id between 16 and 90; 
 SELECT * FROM film_text WHERE length(title) < 10;
 SELECT * FROM film_text WHERE title LIKE "Ar%";
 SELECT * FROM film_text WHERE title LIKE "Ar%" and film_id > 38;
 SELECT * FROM film_text WHERE locate("drama", description);
-SELECT *, locate("drama", description) FROM film_text WHERE locate("drama", description);
-
--- prepare and execute
---
 SELECT * FROM film_text WHERE title LIKE "Ar%" and film_id > 38;
 
-PREPARE sql_stmt FROM 'SELECT * FROM film_text WHERE title LIKE "Ar%" and film_id > ?';
-SET @id := 38;
-EXECUTE sql_stmt USING @id;
-
-PREPARE sql_stmt FROM 'SELECT * FROM film_text WHERE title LIKE ? and film_id > ?';
-SET @text := "Ar%";
-SET @id := 38;
-EXECUTE sql_stmt USING @text, @id;
-
-DROP PREPARE sql_stmt;
-DEALLOCATE PREPARE sql_stmt;
 
 -- group by
 --
+use sakila;
 SELECT * FROM rental;
 SELECT customer_id, rental_id FROM rental;
-SELECT customer_id, count(rental_id) FROM rental GROUP BY customer_id;
+SELECT customer_id, rental_id FROM rental order by customer_id ;
+
 SELECT customer_id, count(rental_id) FROM rental GROUP BY customer_id ORDER BY customer_id DESC;
 SELECT customer_id, count(rental_id) FROM rental GROUP BY customer_id ORDER BY count(rental_id) DESC;
-
+SELECT customer_id, amount FROM payment ;
 SELECT customer_id, sum(amount) FROM payment GROUP BY customer_id ORDER BY sum(amount) DESC;
 
 -- having
@@ -199,19 +185,25 @@ SELECT customer_id, sum(amount) FROM payment GROUP BY customer_id WHERE  sum(amo
 SELECT customer_id, sum(amount) FROM payment GROUP BY customer_id HAVING sum(amount) > 150 ORDER BY sum(amount) DESC; 
 
 -- joins
+
 --
+use sakila ;
 SELECT category_id, name FROM category;
 SELECT film_id, category_id  FROM film_category;
 
 SELECT film_category.film_id, category.category_id, category.name FROM category
 INNER JOIN film_category
 ON film_category.category_id  = category.category_id;
-
+--
+select c.name , c.category_id , fc.film_id
+from category as c , film_category as fc
+where c.category_id = fc.category_id; 
+ 
 SELECT fc.film_id, c.category_id, c.name FROM category AS c
 INNER JOIN film_category AS fc
 ON fc.category_id  = c.category_id;
 
-SELECT fc.film_id, c.category_id, c.name FROM category AS c
+SELECT fc.film_id , c.category_id, c.name FROM category AS c
 INNER JOIN film_category AS fc
 USING (category_id);
 
@@ -225,6 +217,10 @@ USING (category_id);
 
 -- join 3 tables
 --
+show columns from category;
+show columns from film_category;
+show columns from film;
+
 SELECT fc.film_id, f.title, c.category_id, c.name FROM category AS c
 INNER JOIN film_category AS fc
 ON fc.category_id  = c.category_id
@@ -260,7 +256,8 @@ select tbl1.*, tbl2.* from tbl1 cross join tbl2;
 
 -- views
 --
-CREATE VIEW vw_file_genre
+use sakila ;
+CREATE VIEW vw_film_genre
 AS
 SELECT fc.film_id, f.title AS "Film Name", c.name AS "Genre" FROM category AS c
 INNER JOIN film_category AS fc

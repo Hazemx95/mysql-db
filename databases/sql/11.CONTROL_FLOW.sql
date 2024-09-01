@@ -1,6 +1,7 @@
+-- Active: 1720175661655@@mysql-db@3306@testdb
 -- if elseif else 
 -- case when then else end
--- while end while
+-- while DO end while
 
 -- create a sql statement on film_list view to return high if rent is more than 3 and low if less than 3 using if statement 
 
@@ -49,7 +50,7 @@ DELIMITER ;
 
 use sakila;
 SELECT AVG(price) FROM film_list;
-SELECT fnComparePrice(2.99);
+SELECT fnComparePrice(4.2);
 
 
 
@@ -80,7 +81,6 @@ DELIMITER ;
 -- WHILE condition DO
 --     statements;
 -- END WHILE;
-
 
 CREATE PROCEDURE dowhile()
 BEGIN 
